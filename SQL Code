@@ -1,0 +1,156 @@
+## QUESTION 1
+create database employee;
+use employee;
+
+##after employee database - table-right click-table data import wizard-
+## -file path-next-next-next-finish(for importing data sets)
+select * from data_science_team;
+select * from emp_record_table;
+select * from proj_table;
+
+## QUESTION 3
+
+SELECT EMP_ID,first_name,last_name,gender,dept,
+row_number () over(partition by dept order by emp_id ) as department_vise
+from emp_record_table;
+
+## QUESTION 4.1
+
+SELECT EMP_ID,first_name,last_name,gender,dept,emp_rating
+from emp_record_table 
+where emp_rating<2;
+
+## QUESTION 4.2
+
+SELECT EMP_ID,first_name,last_name,gender,dept,emp_rating
+from emp_record_table 
+where emp_rating>4;
+
+## QUESTION 4.3
+
+SELECT EMP_ID,first_name,last_name,gender,dept,emp_rating
+from emp_record_table 
+where emp_rating between 2 and 4;
+
+## QUESTION 5
+
+select concat(first_name,' ',last_name) as NAME ,DEPT from emp_record_table
+where dept='finance';
+
+## QUESTION 6
+
+select concat(first_name,' ',last_name) as NAME, role ,DEPT,manager_id, 
+row_number() over(partition by manager_id order by emp_id)as number_of_reporters
+from emp_record_table;
+
+## QUESTION 7
+
+SELECT * FROM emp_record_table
+WHERE DEPT='HEALTHCARE'
+UNION
+SELECT * FROM emp_record_table
+WHERE DEPT='FINANCE';
+
+## QUESTION 8
+## GROUP BY THEN ONLY WE CAN GET MAX CALCULATION SO ALWAYS MAX CALCULATION NEED INSIDE SUBQUERY
+
+SELECT E.EMP_ID,E.first_name,E.last_name,E.ROLE,E.dept,E.emp_rating,M.MAX_EMP_RATING
+from emp_record_table E 
+JOIN
+(SELECT DEPT,MAX(emp_rating) as max_emp_rating
+from emp_record_table 
+GROUP BY DEPT ) M 
+ON E.DEPT=M.DEPT ORDER BY DEPT, EMP_RATING;
+
+## QUESTION 9
+
+SELECT EMP_ID,first_name,last_name,ROLE,SALARY,
+MAX(SALARY) OVER(PARTITION BY ROLE ) AS MAXIMUM_SALARY,
+MIN(SALARY) OVER(PARTITION BY ROLE ) AS MINIMUM_SALARY
+FROM emp_record_table;
+
+## QUESTION 10
+
+SELECT EMP_ID,first_name,last_name,ROLE,EXP,COUNTRY,
+RANK() OVER(ORDER BY EXP DESC) AS RANKS
+FROM emp_record_table;
+
+## QUESTION 11
+
+CREATE VIEW SALARY_MORE AS(
+SELECT * FROM emp_record_table
+WHERE SALARY>6000);
+SELECT * FROM SALARY_MORE;
+
+## QUESTION 12
+
+SELECT emp_id, first_name, last_name, role, dept, EXP
+FROM emp_record_table
+WHERE EXP > (
+    SELECT 10
+);
+
+## QUESTION 13
+
+DELIMITER $$
+CREATE PROCEDURE EMPLOYEE_EXPERIENCE()
+BEGIN
+SELECT * FROM emp_record_table WHERE EXP>3;
+END $$
+DELIMITER ;
+CALL EMPLOYEE_EXPERIENCE();
+
+## QUESTION 14
+
+DROP FUNCTION IF EXISTS EXP_JOB_PROFILE;
+DELIMITER $$
+CREATE FUNCTION EXP_JOB_PROFILE(EXP VARCHAR(50))
+RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+	DECLARE profile_1 VARCHAR(50);
+	CASE
+      WHEN EXP<=2 THEN 
+      SET profile_1 = 'JUNIOR DATA SCIENTIST';
+      WHEN EXP >2  AND EXP<=5 THEN 
+      SET profile_1 ='ASSOCIATE DATA SCIENTIST';
+      WHEN EXP > 5 AND EXP<=10 THEN 
+      SET profile_1 ='SENIOR DATA SCIENTIST';
+      WHEN EXP > 10 AND EXP<=12 THEN 
+      SET profile_1 ='LEAD DATA SCIENTIST';
+      WHEN EXP> 12 AND EXP<= 16 THEN
+      SET profile_1 ='MANAGER';
+	ELSE 
+    SET profile_1 ='INVALID';
+    END CASE;
+    
+    RETURN PROFILE_1;
+END$$
+DELIMITER ;
+
+SELECT FIRST_NAME,LAST_NAME,EXP,ROLE as assigned_role,DEPT,EXP_JOB_PROFILE(EXP)as expected_role,
+CASE 
+	WHEN ROLE=EXP_JOB_PROFILE(EXP) THEN "VALID"
+    ELSE "INVALID"
+    END AS PROJECT_STATUS
+    FROM DATA_SCIENCE_TEAM;
+    
+  ## QUESTION 15
+  
+  alter table emp_record_table drop index employee_with_first_name;
+  CREATE INDEX employee_with_first_name ON emp_record_table(first_name);
+  EXPLAIN SELECT * FROM emp_record_table WHERE first_name = 'Eric';
+  SELECT * FROM emp_record_table WHERE first_name = 'Eric';
+  show indexes from emp_record_table;
+  
+    ## QUESTION 16
+    
+    select emp_id,first_name,last_name,salary,emp_rating,
+    salary*.05*emp_rating as bonus from emp_record_table ;
+    
+    
+    ## QUESTION 17
+    
+    select country,continent ,round(avg(salary),2) as avg_salary  
+    from emp_record_table 
+    group by country, continent;
